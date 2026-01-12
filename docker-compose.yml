@@ -1,0 +1,64 @@
+# ==============================================================================
+# Live VLM WebUI - Docker Compose for External Ollama
+# ==============================================================================
+# This docker-compose.yml is configured to use an external Ollama instance
+# that is already running on the host machine.
+#
+# Prerequisites:
+#   - Ollama must be running on the host (http://localhost:11434)
+#   - Docker and Docker Compose must be installed
+#
+# Usage:
+#   docker compose up -d
+#
+# Access:
+#   - Live VLM WebUI: https://localhost:8090
+#   - Ollama API (external): http://localhost:11434/v1
+#
+# Stop:
+#   docker compose down
+# ==============================================================================
+
+services:
+  # ============================================================================
+  # Live VLM WebUI - Using External Ollama
+  # ============================================================================
+  live-vlm-webui:
+    image: ghcr.io/nvidia-ai-iot/live-vlm-webui:latest
+    container_name: live-vlm-webui
+    # Using host network mode to:
+    # 1. Access external Ollama on localhost:11434
+    # 2. Enable WebRTC for webcam streaming
+    network_mode: host
+    environment:
+      - PYTHONUNBUFFERED=1
+      # Optional: Pre-configure API endpoint (can be changed in WebUI)
+      - API_BASE=http://localhost:11434/v1
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu, utility]
+
+# ==============================================================================
+# Notes:
+# ==============================================================================
+# 1. The WebUI will connect to Ollama at http://localhost:11434
+#    (Ollama must be running separately on your host)
+#
+# 2. Make sure your Ollama has vision models installed:
+#    ollama pull llama3.2-vision:11b
+#    ollama pull llava:13b
+#
+# 3. If you need to use a different Ollama endpoint, configure it in the
+#    WebUI settings after starting.
+#
+# 4. GPU access is configured for NVIDIA GPUs. If you don't have a GPU,
+#    remove the 'deploy' section.
+#
+# 5. For Jetson devices, see the platform-specific configuration in the
+#    original repository's docker-compose.yml
+# ==============================================================================

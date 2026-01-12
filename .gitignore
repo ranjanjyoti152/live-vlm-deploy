@@ -1,0 +1,22 @@
+# Cloned repository (reference only)
+live-vlm-webui/
+
+# Environment files with secrets
+.env
+
+# Docker volumes
+*.sock
+
+# System files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
