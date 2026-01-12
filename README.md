@@ -1,55 +1,84 @@
-# Live VLM WebUI - Docker Setup with External Ollama
+# Live VLM WebUI - Docker Compose Setup
 
-This directory contains a Docker Compose setup for running the NVIDIA Live VLM WebUI with an external Ollama instance.
+This directory contains a Docker Compose setup for running the NVIDIA Live VLM WebUI with flexible Ollama deployment options.
+
+## 🎯 Two Deployment Modes
+
+Choose the mode that best fits your needs:
+
+### 🔵 Mode 1: External Ollama (Default)
+Use your existing Ollama installation on the host machine.
+- ✅ Share Ollama across multiple applications
+- ✅ Lower memory footprint (one container)
+- ✅ Direct control over Ollama
+
+### 🟢 Mode 2: Ollama in Docker (Recommended for Beginners)
+Run Ollama as a Docker container alongside the WebUI.
+- ✅ No Ollama installation needed
+- ✅ Fully containerized and isolated
+- ✅ Easier cleanup and management
+- ✅ Perfect for testing and development
+
+---
 
 ## 🚀 Quick Start
 
-### Prerequisites
+### Option A: With Ollama in Docker (Easiest) ⭐
 
-1. **Ollama** must be installed and running on your host machine
+**No Ollama installation needed! Everything runs in Docker.**
+
+```bash
+# 1. Start both Ollama and WebUI containers
+docker compose --profile ollama up -d
+
+# 2. Pull a vision model
+docker exec ollama ollama pull llama3.2-vision:11b
+
+# 3. Check status
+docker compose ps
+
+# 4. View logs
+docker compose logs -f
+```
+
+**That's it!** Access the WebUI at `https://localhost:8090`
+
+---
+
+### Option B: With External Ollama
+
+**Use your existing Ollama installation.**
+
+#### Prerequisites:
+
+1. **Install Ollama** (if not already installed)
    ```bash
-   # Install Ollama (if not already installed)
    curl -fsSL https://ollama.ai/install.sh | sh
-   
-   # Start Ollama service
+   ```
+
+2. **Start Ollama service**
+   ```bash
    ollama serve
    ```
 
-2. **Pull a vision model** in Ollama
+3. **Pull a vision model**
    ```bash
-   # Recommended models
    ollama pull llama3.2-vision:11b
-   # OR
-   ollama pull llava:13b
-   # OR
-   ollama pull bakllava:7b
    ```
 
-3. **Docker and Docker Compose** must be installed
-   ```bash
-   # Check if Docker is installed
-   docker --version
-   docker compose version
-   ```
-
-4. **NVIDIA GPU** with Docker GPU support (optional but recommended)
-   ```bash
-   # Install NVIDIA Container Toolkit if not already installed
-   # See: https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html
-   ```
-
-### Start the WebUI
+#### Start the WebUI:
 
 ```bash
-# Navigate to this directory
-cd /home/proxpc/live-vlm
-
-# Start the Live VLM WebUI
+# Start only the WebUI container
 docker compose up -d
 
 # Check logs
-docker compose logs -f live-vlm-webui
+docker compose logs -f
 ```
+
+**Access the WebUI** at `https://localhost:8090`
+
+---
 
 ### Access the WebUI
 
@@ -188,38 +217,16 @@ docker compose down -v
 
 ## 📚 Additional Resources
 
+**Project Documentation:**
+- [Deployment Modes Guide](./DEPLOYMENT_MODES.md) - Detailed comparison and switching guide
+- [Quick Reference](./QUICKSTART.md) - Common commands and tips
+- [Environment Configuration](./.env.example) - Configuration options
+
+**External Links:**
 - [Live VLM WebUI GitHub](https://github.com/NVIDIA-AI-IOT/live-vlm-webui)
 - [Ollama Documentation](https://github.com/ollama/ollama)
 - [Available Vision Models](https://ollama.com/search?c=vision)
 - [Docker Compose Documentation](https://docs.docker.com/compose/)
-
-## 📝 Architecture
-
-```
-┌─────────────────────────────────────────────────┐
-│                   Host Machine                  │
-│                                                 │
-│  ┌─────────────────┐      ┌─────────────────┐  │
-│  │ Ollama Service  │      │  Docker         │  │
-│  │ (localhost:     │◄─────┤  Container:     │  │
-│  │  11434)         │      │  Live VLM WebUI │  │
-│  └─────────────────┘      │  (port 8090)    │  │
-│                           └─────────────────┘  │
-│                                  ▲              │
-└──────────────────────────────────┼──────────────┘
-                                   │
-                            Browser (HTTPS)
-                         https://localhost:8090
-```
-
-## 🎯 Use Cases
-
-- 🔒 **Security:** Real-time monitoring and alert generation
-- 🤖 **Robotics:** Visual feedback for robot control
-- 🏭 **Industrial:** Quality control, safety monitoring
-- 🏥 **Healthcare:** Activity monitoring, fall detection
-- ♿ **Accessibility:** Visual assistance for visually impaired
-- 📚 **Education:** Interactive learning experiences
 
 ---
 

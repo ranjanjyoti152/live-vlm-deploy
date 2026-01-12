@@ -1,19 +1,29 @@
 # ==============================================================================
-# Live VLM WebUI - Docker Compose for External Ollama
+# Live VLM WebUI - Docker Compose
 # ==============================================================================
-# This docker-compose.yml is configured to use an external Ollama instance
-# that is already running on the host machine.
+# Two deployment modes available:
 #
-# Prerequisites:
-#   - Ollama must be running on the host (http://localhost:11434)
-#   - Docker and Docker Compose must be installed
+# 1. External Ollama (Default) - Use existing Ollama on host
+#    Usage: docker compose up -d
+#    Requires: Ollama running on host at http://localhost:11434
 #
-# Usage:
+# 2. Ollama in Docker - Run Ollama as a container
+#    Usage: docker compose --profile ollama up -d
+#    Automatically starts Ollama container with GPU support
+#
+# ==============================================================================
+# Quick Start Commands:
+# ==============================================================================
+# External Ollama (default):
 #   docker compose up -d
+#
+# With Ollama in Docker:
+#   docker compose --profile ollama up -d
+#   docker exec ollama ollama pull llama3.2-vision:11b
 #
 # Access:
 #   - Live VLM WebUI: https://localhost:8090
-#   - Ollama API (external): http://localhost:11434/v1
+#   - Ollama API: http://localhost:11434/v1
 #
 # Stop:
 #   docker compose down
@@ -21,13 +31,40 @@
 
 services:
   # ============================================================================
-  # Live VLM WebUI - Using External Ollama
+  # Ollama Service (Optional - enabled with --profile ollama)
+  # ============================================================================
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    profiles:
+      - ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ============================================================================
+  # Live VLM WebUI - Works with External or Containerized Ollama
   # ============================================================================
   live-vlm-webui:
     image: ghcr.io/nvidia-ai-iot/live-vlm-webui:latest
     container_name: live-vlm-webui
     # Using host network mode to:
-    # 1. Access external Ollama on localhost:11434
+    # 1. Access Ollama on localhost:11434 (external or containerized)
     # 2. Enable WebRTC for webcam streaming
     network_mode: host
     environment:
@@ -43,22 +80,41 @@ services:
               count: all
               capabilities: [gpu, utility]
 
+volumes:
+  ollama-data:
+    driver: local
+
+# ==============================================================================
+# Deployment Modes:
+# ==============================================================================
+# Mode 1: External Ollama (Default)
+#   - Use your existing Ollama installation on the host
+#   - Command: docker compose up -d
+#   - Requires: Ollama running at http://localhost:11434
+#   - Lighter on resources (no extra container)
+#
+# Mode 2: Ollama in Docker
+#   - Run Ollama as a container alongside the WebUI
+#   - Command: docker compose --profile ollama up -d
+#   - Self-contained, no need for host Ollama installation
+#   - Models stored in Docker volume (persistent)
+#   - Pull models: docker exec ollama ollama pull llama3.2-vision:11b
+#
 # ==============================================================================
 # Notes:
 # ==============================================================================
-# 1. The WebUI will connect to Ollama at http://localhost:11434
-#    (Ollama must be running separately on your host)
+# 1. Both modes connect to Ollama at http://localhost:11434
+#    - External mode: Ollama runs on host
+#    - Docker mode: Ollama runs in container, exposed via port mapping
 #
-# 2. Make sure your Ollama has vision models installed:
-#    ollama pull llama3.2-vision:11b
-#    ollama pull llava:13b
+# 2. Make sure to install vision models:
+#    External: ollama pull llama3.2-vision:11b
+#    Docker:   docker exec ollama ollama pull llama3.2-vision:11b
 #
-# 3. If you need to use a different Ollama endpoint, configure it in the
-#    WebUI settings after starting.
+# 3. GPU access is configured for NVIDIA GPUs. If you don't have a GPU,
+#    remove the 'deploy' sections.
 #
-# 4. GPU access is configured for NVIDIA GPUs. If you don't have a GPU,
-#    remove the 'deploy' section.
-#
-# 5. For Jetson devices, see the platform-specific configuration in the
-#    original repository's docker-compose.yml
+# 4. To switch modes, stop and restart with the appropriate command:
+#    docker compose down
+#    docker compose [--profile ollama] up -d
 # ==============================================================================
